@@ -1,0 +1,275 @@
+Compared to the original [[2020-11-23_CMOs-TG--agenda--surrender.mediawiki|agenda]] -  as usual, we did not get to all agenda items. But we did obtain some clarity on the first technical issue.
+
+__TOC__
+
+= Links =
+[[2020-11-23_CMOs-TG--agenda--surrender.mediawiki|agenda]]
+[[2020-11-23_CMOs-TG--minutes--surrender.mediawiki|minutes]]
+[[https://onedrive.live.com/redir?resid=311E2D4493AE34C3%21137&authkey=%21AL2wLNKLCyX8qMk&page=View&wd=target%28CMOs%20TG%2FMeetings.one%7Cbb3604e3-6255-4d3a-8fa0-af3a32b3bf75%2F2020-11-23_CMOs-TG-%7C117b1c00-08c3-4e41-871b-be421e675c59%2F%29&wdorigin=703|raw notes]]
+
+Please tell me if you can or cannot access the raw notes. They should be readable to the world, if I have set things up properly.
+
+= Item #-1 - RVIA CTO - MarkH =
+As usual, MarkH  started the first 10 minutes or so discussing the changes to the RISC-V international organization,  the group contributor model, restructuring and renaming.
+
+Particularly relevant to the CMOs: the "RIOS lab"  may  be able to help with formal model for CMOs.
+
+TBD: MarkH  says that documents of this will be coming soon.
+
+= Item #0 - administrivia =
+
+DONE: Essentially as in  agenda
+
+Separate GitHub repos  have been set up
+* https://github.com/riscv/riscv-CMOs
+* https://github.com/riscv/riscv-CMOs-discuss 
+
+To post to -discuss you need a GitHub accouunt, and then email Ag or DK.
+
+Repos originally cloned, WIP to diverge.
+
+Agendas and minutes in [[../agendas-and-minutes]]
+* verbose: https://github.com/riscv/riscv-CMOs/blob/master/agendas-and-minutes/2020-11-23_CMOs-TG--minutes--surrender.mediawiki
+
+Names such as [[2020-11-23_CMOs-TG--minutes--surrender]].
+
+= Item #1 - Surrender wrt Range Oriented CMO.UR and CMO.AR =
+
+<ul>From the Agenda, ~email:</ul>
+
+In the interests of making progress on other issues, and unblocking I/D consistency (DW) J-extension
+
+Am reworking spec rework spec for CBO.EA, CBO.UX, CMO.ALL
+
+Will leave CMO.UR and CMO.UX in for now, but heavily flag - just to collect input.
+
+Encodings: would like to set RD=X0, to permit CMO.UR or CMO.AR in future (if we eventually go that way, as Ag/KA/AW hope.)
+
+TBD: discovery.
+
+TBD: link to email.
+
+
+= STOPPED BEFORE HERE: Item #2 - Use case for Power Mgmt/Persistence =
+
+After item #1, we started to  move on to item #2 from the agenda,  but we quickly returned to sub issues of item #1.
+
+= Item #1 sub-issues =
+
+I mentioned in passing the instruction formats I had sent in email last week when I "surrendered", and I got jumped on.
+
+== addressing modes for CBOs? ==
+
+In the surrender email, I suggested:
+* M[rs1+imm12]
+** M[rs1+imm12] addressing mode for block prefetches 
+** maybe M[rs1+imm12] for one or a few CMO suitable for loops
+
+* M[rs1]  when we run out of expensive M[rs1+imm12]  instruction encodings
+
+Much objection to providing a full address mode M[rs1+imm12]
+* POR: M[rs1] only addressing for all PREFETCHEs and CBOs
+** only if need proven: PREFETCH M[rs1+imm12] 
+*** studies…
+
+
+Subsequent email discussions...  amongst other things pointing to the RISC-V HINT instructions, many of which have RS1 and IMM12. 
+
+
+== RD or not RD ==
+
+The email I sent out last week proposed and instruction encoding that had RD=X0.
+
+An objection was raised that in order  to allow cache line size to change over time, 
+e.g. during  migration between CPUs,  one of the proposals  was to have the CMO instruction return something related to the cache line size. 
+(Exact details have been discussed in the wiki, the earlier proposal, and email  prior to and undoubtedly after this meeting)
+
+I was a bit surprised, since it was my understanding that one of the biggest objections 
+to having range based CMOs was that CMOs on a store pipe do not want to write multi bit values. 
+(SC writes a single bit value,  and on  some implementations is done in the load pipe.) 
+
+Nevertheless, we agreed that the POR should be:
+
+1.  we ask for an instruction encoding that contains an RD field
+
+2.  at this point in time, require RD=X0
+
+Preserve the possibility of using RD<>X0 fields in the future
+
+== Instruction Encodings for CMOs ==
+
+Much of the  discussion/argumentation was related to unfamiliarity with the RISC-V instruction encodings. 
+In subsequent email this was discussed with actual data rather than hearsay.  
+That discussion was still running as I write these notes, but AFAICT:
+
+There are two primary candidate instruction  encoding formats for CMOs
+
+* R-type:  containing RD, RS1, and RS2
+* I-type:  containing RD, RS1, and IMM12.
+
+If we are to use either of these formats,  RS1 will  undoubtedly be used in forming the address.
+
+The RD field is possible,  and it is  natural to require RD=X0 for now, as discussed in the previous item.
+
+Whether we use an R-format instruction or an I-format instruction is ...  fairly arbitrary.  
+See one of the other items up above wrt M[rs2+imm12].  
+Unless the IMM12 or RS2 fields are used for something  related to their normal use, those bits are available to distinguish encodings.
+
+Since people jumped up and down about not using IMM12,  
+my understanding of the "POR" is that  we will ask for an R format instruction,  and require RD=X0, and RS2=X0,  
+leaving those fields available for future use, whether by the CMOs  TG or by some other group.
+
+Not yet POR: I-type or R-type
+
+See also: 
+
+* "RS2 is a terrible thing to waste", 
+in DW's  presentation [[https://github.com/riscv/riscv-CMOs/blob/master/discussion-files/RISC_V_range_CMOs_bad_v1.00.pdf|Range based CMOs/CBOs considered harmful]]
+
+
+== Loops ==
+
+Some of the instruction encoding duscussions were prompted by loop code,
+exposing cultural differences, such as the following:
+
+(This is by no means a complete list, 
+just an attempt to record that we were duscussing this topic, 
+although the discussion was ... fast ...
+I have already seen to and fro about this in the mailing list.
+If you think the following is wrong or incomplete or misl;eading, 
+tell me, and I will correct 
+and/or move this section to the wiki and mailing list
+and link.)
+
+Software Pipelining: 
+* e.g. in any DAXPY loop iteration (rolled or unrolled)
+** stores may be for iteration I, 
+** loads for iteration J, 
+** prefetches for K, 
+** I < J < K, 
+*** J-I related to compute latency
+*** K-I related to prefetch leadtime needed to cover cache miss latency.
+
+Whether this motivates M[rs1+imm12] addressing or not depends on loop unrolling.
+
+Loop unrolling:
+* server and GP guys assume loop unrolling
+* vs code size is important for embedded, so prefer not to require loop unrolling
+
+HPC:
+* "surely any HPC code will have HW prefetch engines, and not need to use SW prefetch instructions"
+* vs not all HPC processors have HW prefetch engines
+
+HPC:
+* "surely all HPC code will use the Vector extension, and hence will not need (scalar) SW prefetch instructions"
+* vs prefetches can be useful even in vector code
+
+Most or all participants were familiar with the concept of software prefetching in such array loops.
+
+Many seemed surprised by the example that included a CMO to indicate that a cache line was not going to be accessed again,
+so that it could be 
+* SETLRU'ed - marked wrt eviction priority, to reduce chances of thrashing out data that wil be used more soon.
+* FLUSH triggered at time under ninja programmer cibtrol - the sorts of guys who schedule DRAM page opens, and who ciomplained that they lost this control with WB cache
+* most aggressively, DISCARD'ing dirty data (e.g. array tmps) whose dirty data does not need to be written back.
+** obvious security issues
+** less obvious that some HPC systems know how to solve such security issues with DISCARD
+
+TBD: I (Glew) took action item to bring such issus to the RISC-V HPC SIG.
+
+One comment overheard: 
+"Why not just use a non-temporal load? 
+It's much cheaper (in terms of instruction encodings?) 
+to have a single non-temporal bit in a load instruction 
+than it is to have a CMO with imm12."
+
+TBD: follow-on discussions
+
+== Adding extra dynamic instructions to critical loops ==
+
+Another cultural difference:  willingness to add extra instructions to critical loops.
+(this was one of the motivations for  prefetches and other CMOs with M[rs1+imm12]).
+
+Some microarchitectures, typically high end server and a general purpose systems, are totally willing to add instructions to critical loops. E.g. they are not  sensitive the code size, because they have scads of instruction cache and memory.  they are happy to do loop unrolling.  they may have sufficient superscalar that adding a few extra instructions to do  address computations is a little cost. Or, the loops in question may have lots of idle time waiting on cache misses.
+
+However,  other microarchitectures and customers, typically in low end embedded systems and (surprise!?)  HPC systems,  are sensitive to extra instructions.   e.g. code size, FLASH and/or very small instruction caches. (Yes,  [[some embedded systems have caches -  believe it or not]].)  e.g. they may have comparatively  narrow pipelines - 1mem+1compute or 2mem+1compute -  on which it is totally reasonable to expect to achieve  nearly speed of light  performance, even in the presence of cache misses. RISC ISAs+ microarchitectures  are often compared to more specialized DSP microarchitectures in such application areas -  and the RISC ISAs often lose the comparison (and the sale) because they require additional instructions and/or loop unrolling (and because RISCs lack [[zero overhead loops]]).
+
+On such relatively narrow pipelines, every additional instruction within a critical loop can easily add to the critical loop time. And when the critical loop time,  e.g. for DAXPY or an FIR  filter,  is often only one or two cycles per  multiply-add compute instruction, completely  hiding memory latency,  every cycle added to the critical loop by an additional instruction can easily be 50% or 25% or ...  a fairly significant slowdown.
+
+This is a general principle.
+
+Q: Would  such code that is so sensitive  to additional instructions within the loop use prefetch or other CMOs?  since obviously those are extra instructions within the  critical loop.
+
+A: Not if they can help it. But often they can't help it. E.g. the cache misses may be unavoidable, and the  critical path added by the prefetch instructions is more than made up by hiding cache miss latency.
+
+Somebody said "embedded systems don't have caches, they have tightly integrated memory (TIM, SRAM)".  Again, this is true for many, but not all, embedded systems.
+It is certainly easier to  attain high utilization with TIM.  it is certainly easier to attain deterministic real-time  with TIM.
+But many workloads and customers want high efficiency, but not necessarily hard real-time.
+Caches often  make software maintenance easier,  and hence total lifecycle cost.
+If an implementation of a RISC ISA with a I&D caches can achieve high efficiency, with or without CMOs, such customers may consider.
+
+(BTW:  I hope that we will one day talk about other CMO related techniques to provide  better cache performance for embedded systems.)
+
+TBD: Although we did have this discussion in the meeting, the above should probably be re-factored into the wiki.  It is unfair for I, your humble secretary, to take advantage of writing the  minutes to explain in more detail.
+
+ 
+
+== CMO.ALL semantics ==
+
+Towards the very end, we very briefly touched on CMO.ALL semantics. 
+
+I (Glew) expressed "obviously"  the following implementations were possible:
+
+* trap and emulate
+* synch FSM (or ucode)  blocking at retirement
+* asynch FSM 
+
+Trap and emulate:
+* an objection was raised about migration during trap and emulate
+* this objection quickly met, because trap and emulate is either in M mode or system code, which has control of migration
+
+I said that "obviously" the code sequence I expected  permits asynchronous FSMs.
+
+<pre>
+      ....
+      CMO.ALL
+      ...
+      COMPLETION FENCE
+      ...
+</pre>
+
+"Obviously"  I was premature.
+
+It was reported that a major RISC-V company's CMOs are FSM blocking only.
+With the feeling that this was not just an implementation decision,
+but that it should also be an architectural decision.
+I.e. that the CMO.ALL would be self fencing - and no COMPLETION-FENCE would be required for it.
+Along the lines of the existing Ri5 invalidation ops like FENCE.I and SFENCE.VMA that are self fencing.  
+
+E.g. in RISC-V one does not do `TLBFLUSH A1; TLBFLUSH A2; ...` i.e. one cannot batch up a number of TLB flushes, possibly other stuff
+and then do a fence to ensure that the TLBFLUSHes are all done. Instead, RISC-V one does `sfence.vma A1; sfence.vma a2; ...`, 
+each TLBFLUSH self fencing (wrt page table walks).
+
+= Wiki followups? =
+
+These minutes, which live in the RISC-V CMOs TG GitHub [[https:github.com/riscv/riscv-CMOs|repo]]
+contain links to pages in the associated [[../../../../riscv-CMOs-discuss/wiki|riscv-CMOs-discuss/wiki]]
+which will only be created when a TG member follows the link and starts writing.
+
+TBD: Unlike auto links in a wiki,  unlike if these links were in the same wiki, there is no coloring to indicate which of these pages exist or do not exist. :-(
+TBD:  Run tool to detect nonexistent links, and possibly  indicate that here? ( Although it might be better to be doing this in a wiki.)
+
+* [[../../../../riscv-CMOs-discuss/wiki/addressing-modes-for-CBOs|addressing-modes-for-CBOs]]
+* [[../../../../riscv-CMOs-discuss/wiki/instruction-encodings-for-CBOs|instruction-encodings-for-CBOs]]
+* [[../../../../riscv-CMOs-discuss/wiki/should-CBOs-have-or-write-RD|should-CBOs-have-or-write-RD]]
+* [[../../../../riscv-CMOs-discuss/wiki/should-CBOs-have-RS2-or-IMM12|should-CBOs-have-RS2-or-IMM12]]
+* [[../../../../riscv-CMOs-discuss/wiki/SW-pipelined-loops,-unrolling,-and-SWPF-addressing-modes|SW-pipelined-loops,-unrolling,-and-SWPF-addressing-modes]]
+* [[../../../../riscv-CMOs-discuss/wiki/SWPF-vs-HWPF|SWPF-vs-HWPF]]
+* [[../../../../riscv-CMOs-discuss/wiki/Prefetch-and-Flush-CMOs-for-critical-loops|Prefetch-and-Flush-CMOs-for-critical-loops]]
+* [[../../../../riscv-CMOs-discuss/wiki/is-it-or-is-it-not-okay-to-add-instructions-to-critical-loops|is-it-or-is-it-not-okay-to-add-instructions-to-critical-loops]]
+* [[../../../../riscv-CMOs-discuss/wiki/SW-flushes-in-loops|SW-flushes-in-loops]]
+* [[../../../../riscv-CMOs-discuss/wiki/CMOs-including-SWPF-and-vectors|CMOs-including-SWPF-and-vectors]]
+* [[../../../../riscv-CMOs-discuss/wiki/Non-temporal-loads-vs-CMOs-in-loops|Non-temporal-loads-vs-CMOs-in-loops]]
+* [[../../../../riscv-CMOs-discuss/wiki/CMO.ALL-semantics|CMO.ALL-semantics]]
+* [[../../../../riscv-CMOs-discuss/wiki/CMO.ALL-asynch,-non-blocking,-self-fencing|CMO.ALL-asynch,-non-blocking,-self-fencing]]
+* [[../../../../riscv-CMOs-discuss/wiki/CMOs-migration|CMOs-migration]]
+* [[../../../../riscv-CMOs-discuss/wiki/CMOs,-interruptability,-preemptability,-migratability|CMOs,-interruptability,-preemptability,-migratability]]
